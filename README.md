@@ -9,7 +9,6 @@ The stack follows some specific logic concerning the file organization and a cou
 - Synapse homeserver - `matrixdotorg/synapse:latest`
 - Element Web Client - `vectorim/element-web`
 - Synapse Admin - `awesometechnologies/synapse-admin`
-- Turn Server - `instrumentisto/coturn`
 - Telegram Bridge - `dock.mau.dev/tulir/mautrix-telegram:latest`
 - Facebook Bridge - `dock.mau.dev/tulir/mautrix-facebook:latest`
 - Maubot bot manager - `dock.mau.dev/maubot/maubot:latest`
@@ -57,7 +56,6 @@ ${CONF_PATH}/
       db/
       homeserver/
       webchat/
-      turn/
       telegram-bridge/
       facebook-bridge/
       webhook-service/
@@ -415,44 +413,6 @@ app_service_config_files:
 
 <br/>
 
-## Turn server (for audio and video calls)
-
-Create a new file `turnserver.conf` in `${CONF_PATH}/turn/`. Copy and paste the sample file from: https://github.com/coturn/coturn/blob/master/docker/coturn/turnserver.conf
-
-Edit the following in the file:
-
-- Specify and external ip
-    ```
-    external-ip=<YOUR PUBLIC IP,  IF YOU PLAN TO USE IT FROM THE INTERNET>
-    external-ip=<YOUR DOCKER HOST IP>
-    ```
-- Specify a port range
-    ```
-    min-port=64000
-    max-port=65535
-    ```
-    This range worked perfectly for me but you should define your own depending on your network setup
-
-- Certificates:
-    ```
-    cert=/certs/WILDCARD.ms.local.crt
-    pkey=/certs/WILDCARD.ms.local.key
-    ```
-- Define a realm
-    ```
-    realm=turn.ms.local
-    ```
-
-- Uncomment `use-auth-secret`. Generate a alphanumeric and fill `static-auth-secret=`. 
-- In `homeserver.yaml` in `##TURN##` section paste the same alpanumeric at `turn_shared_secret: "ALPHANUMERIC"` and add the following `turn_uris`
-    ```
-    turn_uris:
-    - "turn:turn.ms.local?transport=udp"
-    - "turn:turn.ms.local?transport=tcp"
-    - "turns:turn.ms.local:5349?transport=udp"
-    - "turns:turn.ms.local:5349?transport=tcp"
-    ```
-
 
 <br/>
 
@@ -474,7 +434,6 @@ After a while we should be able to visit the web element UI at `https://webchat.
   - Postgres for the bridges databases
   - No `--serverstransport.insecureskipverify=true` in traefik commands
   - Use `secrets` for sensitive information
-- Turn server runs in host network mode. This is needed to better communicate with UDP. This means that your devices and containers (especially `homeserver`) should be able to resolve `turn.ms.local` to you docker host IP
 - There are some more things to setup for the homeserver, bots and bridges. Please refer to their respective documentations.
 
 
@@ -492,10 +451,6 @@ It goes without saying that I'm not responsible for anything that might go wrong
   - Github: @postgres | https://github.com/postgres/postgres
   - Documentation: https://www.postgresql.org/docs/current/
   - Docker image: https://hub.docker.com/_/postgres/
-- Coturn
-  - Github: @coturn | https://github.com/coturn/coturn
-  - Documantation: https://github.com/coturn/coturn/wiki/
-  - Docker image: https://hub.docker.com/r/instrumentisto/coturn/
 - Element.io Web
   - Github: @vector-im
   - Docker image: https://hub.docker.com/r/vectorim/element-web/

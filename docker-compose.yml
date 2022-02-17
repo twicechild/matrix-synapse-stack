@@ -117,18 +117,6 @@ services:
      - traefik.http.routers.admin.middlewares=admin
      - traefik.http.routers.admin.tls=true
 
-## TURN SERVER
-  turn:
-   image: instrumentisto/coturn
-   container_name: turn
-   restart: always
-   network_mode: host
-   volumes:
-    - ${CONF_PATH}/turn/turnserver.conf:/etc/coturn/turnserver.conf
-    - ${DATA_PATH}/coturn:/var/lib/coturn
-    - ${CERT_PATH}:/certs
-   labels:
-      - traefik.enable=false
    
 # BRIDGES
   telegram-bridge:
