@@ -1,4 +1,4 @@
-# A Matrix (Synapse) Stack with Traefik, coturn, bots, bridges and more
+# A Matrix (Synapse) Stack with Traefik, bots, bridges and more
 
 This is a stack in a single `docker-compose.yaml` file. The guide starts by preconfiguring the various services and finally bringing the stack up.
 
