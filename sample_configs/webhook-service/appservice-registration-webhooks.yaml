@@ -1,0 +1,10 @@
+id: webhooks
+hs_token: oWZdX2TBb3z8t9TGAtG28aUFAXCW8p4X9U2ovuFXAQuDitx5dd8d8tPWiqkZrca8
+as_token: tfBQmLm5UUas2wxNiLR6Z7vBSf9vdKCq9eTjZ6noAHB9gstiwWFzdsdfMW3UvjZ3
+namespaces:
+  users:
+    - exclusive: true
+      regex: '@_webhook.*'
+url: 'http://webhook-service:9000'  
+sender_localpart: webhooks
+rate_limited: false

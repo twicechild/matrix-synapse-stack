@@ -1,0 +1,6 @@
+[tls]
+[tls.stores]
+[tls.stores.default]
+[tls.stores.default.defaultCertificate]
+certFile = "/certs/WILDCARD.ms.local.crt"
+keyFile = "/certs/WILDCARD.ms.local.key"
