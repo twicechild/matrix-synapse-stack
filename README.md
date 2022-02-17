@@ -48,7 +48,7 @@ You can ofcource use diffrent certificates for every service.
 
 <br/>
 
-## Folder hiercacy
+## Folder hierarchy
 
 The docker-compose.yaml file assumes the following hiecrasy:
 ```
