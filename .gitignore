@@ -1,0 +1,15 @@
+# Environment files contain your actual passwords — keep them out of git
+# (the *.example templates are tracked; copy them and fill in your values)
+.env
+db.env
+synapse.env
+
+# Runtime data
+*.db
+*.log
+*.pid
+*.signing.key
+
+# OS/editor noise
+.DS_Store
+*.swp
