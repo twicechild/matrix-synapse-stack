@@ -4,8 +4,6 @@ This is a stack in a single `docker-compose.yaml` file. The guide starts by prec
 
 The stack follows some specific logic concerning the file organization and a couple "bad practices" (exposing ports and folders) that should not be a problem for a non production environment.
 
-I recently came back to give this some love: the two bridges that had died in the meantime (facebook and the old webhook appservice) were replaced by their maintained successors, everything got pinned to current versions, and the guide was cleaned up. The logic is the same as it ever was.
-
 # Components (and images used)
 
 - Postgres - `postgres:18.6`
