@@ -1,0 +1,77 @@
+# Sample config for matrix-hookshot (replaces the old matrix-appservice-webhooks).
+#
+# Full reference: https://matrix-org.github.io/matrix-hookshot/latest/setup.html
+# This sample enables generic webhooks (the successor of the old webhook bridge)
+# plus RSS feeds. GitHub/GitLab/Jira/Figma etc. are optional — see the docs.
+
+bridge:
+  # Basic homeserver configuration
+  domain: matrix.ms.local
+  # Plain HTTP over the shared Docker network — no TLS to verify.
+  url: http://homeserver:8008
+  # Optional. The URL where media hosted on the homeserver is reachable.
+  mediaUrl: https://matrix.ms.local
+  # The port where hookshot will listen for appservice requests.
+  port: 9993
+  # Docker users must set this to 0.0.0.0.
+  bindAddress: 0.0.0.0
+
+logging:
+  level: info
+  colorize: true
+  json: false
+  timestampFormat: HH:mm:ss:SSS
+
+passFile:
+  # A passkey used to encrypt tokens stored inside the bridge.
+  # Generate with:
+  #   openssl genpkey -out passkey.pem -outform PEM -algorithm RSA -pkeyopt rsa_keygen_bits:4096
+  /data/passkey.pem
+
+listeners:
+  # HTTP Listener configuration.
+  # 'resources' may be any of webhooks, widgets, metrics
+  - port: 9000
+    bindAddress: 0.0.0.0
+    resources:
+      - webhooks
+  - port: 9002
+    bindAddress: 0.0.0.0
+    resources:
+      - widgets
+
+# Permissions for using the bridge.
+# actor can be an MxID, a homeserver domain, a roomId, or "*" for all users.
+# level is one of: commands, login, notifications, manageConnections, admin.
+permissions:
+  - actor: matrix.ms.local
+    services:
+      - service: "*"
+        level: admin
+
+# Generic webhook support — the replacement for matrix-appservice-webhooks.
+generic:
+  enabled: true
+  # The base URL external services POST their webhooks to.
+  urlPrefix: https://webhooks.ms.local/
+  userIdPrefix: _webhooks_
+  # Allow users to write short JS transformation snippets. Unsafe in untrusted environments.
+  allowJsTransformationFunctions: false
+  # Whether to wait for the webhook to complete before responding to the sender.
+  waitForComplete: false
+  enableHttpGet: false
+  sendExpiryNotice: true
+  requireExpiryTime: false
+  maxExpiryTime: 30d
+  includeHookBody: true
+
+# RSS/Atom feed support.
+feeds:
+  enabled: true
+  pollIntervalSeconds: 600
+  pollTimeoutSeconds: 30
+  pollConcurrency: 4
+
+# Optional: define profile information for the bot user
+bot:
+  displayname: Hookshot Bot

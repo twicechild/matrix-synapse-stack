@@ -1,0 +1,23 @@
+# Sample registration for matrix-hookshot.
+# Copy to ${CONF_PATH}/hookshot/registration.yml and CHANGE BOTH TOKENS
+# (e.g. with: openssl rand -hex 32).
+#
+# The namespaces must match your homeserver domain and the userIdPrefix values
+# in config.yml (generic.userIdPrefix defaults to _webhooks_).
+
+id: matrix-hookshot # This can be anything, but must be unique within your homeserver
+as_token: CHANGE_ME_A_RANDOM_ALPHANUMERIC_STRING
+hs_token: CHANGE_ME_ANOTHER_RANDOM_ALPHANUMERIC_STRING
+namespaces:
+  rooms: []
+  users:
+    - regex: "@_webhooks_.*:matrix.ms.local"
+      exclusive: true
+    - regex: "@feeds:matrix.ms.local" # Matches the localpart of all serviceBots in config.yml
+      exclusive: true
+  aliases: []
+sender_localpart: hookshot
+# This must match bridge.port in config.yml
+url: http://hookshot:9993
+rate_limited: false
+receive_ephemeral: true

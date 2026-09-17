@@ -279,45 +279,20 @@ presence:
 #       useful for 'fallback authentication'.)
 #
 listeners:
-  # TLS-enabled listener: for when matrix traffic is sent directly to synapse.
-  #
-  # Disabled by default. To enable it, uncomment the following. (Note that you
-  # will also need to give Synapse a TLS key and certificate: see the TLS section
-  # below.)
-  #
-  #- port: 8448
-  #  type: http
-  #  tls: true
-  #  resources:
-  #    - names: [client, federation]
-
-  # Unsecure HTTP listener: for when matrix traffic passes through a reverse proxy
-  # that unwraps TLS.
+  # All traffic enters through Traefik, which unwraps TLS. Synapse itself only
+  # needs one plain HTTP listener.
   #
   # If you plan to use a reverse proxy, please see
   # https://matrix-org.github.io/synapse/latest/reverse_proxy.html.
   #
-  - port: 8448
-    type: http
-    tls: true
-    bind_addresses: ['0.0.0.0']
-    x_forwarded: true
-
-    resources:
-      - names: [client]
-        compress: true
-      - names: [federation]
-        compress: false
-
-
   - port: 8008
     tls: false
     type: http
     x_forwarded: true
     bind_addresses: ['0.0.0.0']
     resources:
-      - names: [client]
-        compress: true
+      - names: [client, federation]
+        compress: false
 
 
 
@@ -608,11 +583,14 @@ retention:
 # any intermediate certificates (for instance, if using certbot, use
 # `fullchain.pem` as your certificate, not `cert.pem`).
 #
-tls_certificate_path: "/certs/WILDCARD.ms.local.crt"
+# TLS is terminated at Traefik, so Synapse does not need certificates.
+# Only set these if you enable the TLS listener above.
+#
+#tls_certificate_path: "/certs/WILDCARD.ms.local.crt"
 
 # PEM-encoded private key for TLS
 #
-tls_private_key_path: "/certs/WILDCARD.ms.local.key"
+#tls_private_key_path: "/certs/WILDCARD.ms.local.key"
 
 # Whether to verify TLS server certificates for outbound federation requests.
 #
@@ -807,7 +785,8 @@ database:
   name: psycopg2
   args:
     user: synapse
-    password: 12345
+    # Must match POSTGRES_PASSWORD in db.env
+    password: CHANGE_ME
     database: synapse_db
     host: db
     cp_min: 5
@@ -1287,8 +1266,9 @@ enable_registration: true
 
 # If set, allows registration of standard or admin accounts by anyone who
 # has the shared secret, even if registration is otherwise disabled.
+# Used by maubot (`mbc auth --register`) and admin tooling.
 #
-registration_shared_secret: "TT09R*PTB*oScj^XnSm=g,OtQ3R@.kVT&CCyNA2Cj8jt=5cEhe"
+registration_shared_secret: "CHANGE_ME"
 
 # Set the number of bcrypt rounds used to generate password hash.
 # Larger numbers increase the work factor needed to generate the hash.
@@ -1478,7 +1458,7 @@ metrics_flags:
 
 # Whether or not to report anonymized homeserver usage statistics.
 #
-report_stats: true
+report_stats: false
 
 # The endpoint to report the anonymized homeserver usage statistics to.
 # Defaults to https://matrix.org/report-usage-stats/push
@@ -1536,8 +1516,9 @@ room_prejoin_state:
 #
 app_service_config_files:
   - /app_services/telegram-registration.yaml
-  - /app_services/facebook-registration.yaml
-  - /app_services/webhooks-registration.yaml
+  - /app_services/instagram-registration.yaml
+  - /app_services/messenger-registration.yaml
+  - /app_services/hookshot-registration.yml
 
 
 # Uncomment to enable tracking of application service IP addresses. Implicitly
@@ -1550,13 +1531,13 @@ app_service_config_files:
 # the registration_shared_secret is used, if one is given; otherwise,
 # a secret key is derived from the signing key.
 #
-macaroon_secret_key: "7X#uIKZ@h*dYOq^E+aOj,:q;sXqes+7s_mLP@h.YOY=pn^DvAu"
+macaroon_secret_key: "CHANGE_ME"
 
 # a secret which is used to calculate HMACs for form values, to stop
 # falsification of values. Must be specified for the User Consent
 # forms to work.
 #
-form_secret: "UUwP-~IWZ27&Hp9N~t^xKfeXj-HchW:d#fwLWq~pWKP:S3H1kN"
+form_secret: "CHANGE_ME"
 
 ## Signing Keys ##
 
