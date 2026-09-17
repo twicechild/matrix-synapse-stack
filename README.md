@@ -8,8 +8,8 @@ I recently came back to give this some love: the two bridges that had died in th
 
 # Components (and images used)
 
-- Postgres - `postgres:17.11-trixie`
-- Synapse homeserver - `matrixdotorg/synapse:v1.98.0`
+- Postgres - `postgres:18.6`
+- Synapse homeserver - `matrixdotorg/synapse:v1.161.0`
 - Element Web Client - `vectorim/element-web:v1.12.28`
 - Synapse Admin - `awesometechnologies/synapse-admin:0.11.4`
 - Traefik proxy - `traefik:v3.7.13`
@@ -78,6 +78,12 @@ ${CERT_PATH}/
 
 - `${DATA_PATH}` : other kind of persistent data (like synapse media store etc.)
 
+Create them before anything else:
+```
+mkdir -p ${CONF_PATH}/{homeserver,webchat,telegram-bridge,instagram-bridge,messenger-bridge,hookshot,maubot,proxy} ${DATA_PATH}/homeserver-media-store ${CERT_PATH}
+```
+Create them as your own user. If you let Docker create missing folders on first mount, it makes them root-owned — and the services run as non-root users, so they won't be able to write to them.
+
 <br/>
 
 <br/>
@@ -98,6 +104,7 @@ Then expose each ENV with `export VAR=VAL`. You will need:
 export DOMAIN=ms.local
 export CONF_PATH=/mnt/configs
 ```
+(These exports are for the `docker run` setup commands below — `docker compose` reads `.env` on its own.)
 
 Also edit `db.env` and change `POSTGRES_PASSWORD` (please). And `synapse.env` if you want different stats reporting.
 
@@ -122,7 +129,12 @@ Some of the services need to initialize some config files before you can finally
 
 ## Postgres
 
-Nothing to do here anymore — the compose file creates the volume for you. Just the password in `db.env`.
+Nothing to configure here — the compose file creates the volume for you. Just the password in `db.env`.
+
+Start only the database now, we will need it for the bridge setups below:
+```
+sudo docker compose up -d db
+```
 
 <br/>
 
@@ -137,10 +149,10 @@ sudo docker run -it --rm \
     -v=${CONF_PATH}/homeserver:/data \
     -e SYNAPSE_SERVER_NAME=matrix.${DOMAIN} \
     -e SYNAPSE_REPORT_STATS=no \
-    matrixdotorg/synapse:v1.98.0 generate
+    matrixdotorg/synapse:v1.161.0 generate
 ```
 
-__IMPORTANT 2: do not skip the generate step.__ It also creates the log config and the signing key. If the log config file is missing, synapse falls back to its built-in default, which tries to write `/homeserver.log` at the root of the container. The image runs as UID 991 (not root), so it will crash-loop with `PermissionError: [Errno 13] Permission denied: '/homeserver.log'` — and no amount of `chmod 777` on your host folders will fix it, because the crash happens before any mounted folder is touched. (Ask the guy from issue #1.)
+__IMPORTANT 2: do not skip the generate step.__ It also creates the log config and the signing key. If the log config file is missing, synapse falls back to its built-in default, which tries to write `/homeserver.log` at the root of the container. The image runs as UID 991 (not root), so it will crash-loop with `PermissionError: [Errno 13] Permission denied: '/homeserver.log'` — and no amount of `chmod 777` on your host folders will fix it, because the crash happens before any mounted folder is touched.
 
 Edit/Uncomment some important fields:
 
@@ -183,8 +195,10 @@ media_store_path: "/media_store"
 - Enable registrations (and set a shared secret — maubot will use it to register bot accounts)
 ```
 enable_registration: true
+enable_registration_without_verification: true
 registration_shared_secret: "<generate one, e.g. openssl rand -base64 32>"
 ```
+(Recent Synapse versions refuse to start with open registration unless you explicitly allow it without verification — fine for a lab stack, use tokens or captcha for anything exposed.)
 
 - Enable user directory search. (This will help us find the bot accounts later)
 ```
@@ -251,7 +265,7 @@ Heads up: the bridge was rewritten in Go since the original version of this guid
       bridge:
           permissions:
               "*": relay
-              "matrix.ms.local": full
+              "matrix.ms.local": user
       ```
 
 3. Create the bridge database on the shared postgres:
@@ -263,7 +277,10 @@ Heads up: the bridge was rewritten in Go since the original version of this guid
     ```
     sudo docker run --rm -v ${CONF_PATH}/telegram-bridge:/data:z dock.mau.dev/mautrix/telegram:v0.2609.0
     ```
-      The `registration.yaml` file is mounted on the `homeserver` container.
+      The `registration.yaml` file is mounted on the `homeserver` container. The bridge images write it as root, so make it readable:
+      ```
+      sudo chmod 644 ${CONF_PATH}/telegram-bridge/registration.yaml
+      ```
 
 <br/>
 
@@ -302,7 +319,7 @@ The setup is almost identical to the Telegram bridge:
       bridge:
           permissions:
               "*": relay
-              "matrix.ms.local": full
+              "matrix.ms.local": user
       ```
 
 3. Create the bridge database:
@@ -314,7 +331,10 @@ The setup is almost identical to the Telegram bridge:
     ```
     sudo docker run --rm -v ${CONF_PATH}/instagram-bridge:/data:z dock.mau.dev/mautrix/meta:ig-v0.2609.0
     ```
-      The `registration.yaml` file is mounted on the `homeserver` container.
+      The `registration.yaml` file is mounted on the `homeserver` container. The bridge images write it as root, so make it readable:
+      ```
+      sudo chmod 644 ${CONF_PATH}/instagram-bridge/registration.yaml
+      ```
 
 <br/>
 
@@ -341,9 +361,9 @@ Same bridge, Messenger mode — hence the plain image tag. Second instance, own 
             software: standard
 
         appservice:
-            address: http://messenger-bridge:29331
+            address: http://messenger-bridge:29319
             hostname: 0.0.0.0
-            port: 29331
+            port: 29319
         ```
 
     - Bridge permissions
@@ -351,7 +371,7 @@ Same bridge, Messenger mode — hence the plain image tag. Second instance, own 
       bridge:
           permissions:
               "*": relay
-              "matrix.ms.local": full
+              "matrix.ms.local": user
       ```
 
 3. Create the bridge database:
@@ -363,7 +383,10 @@ Same bridge, Messenger mode — hence the plain image tag. Second instance, own 
     ```
     sudo docker run --rm -v ${CONF_PATH}/messenger-bridge:/data:z dock.mau.dev/mautrix/meta:v0.2609.0
     ```
-      The `registration.yaml` file is mounted on the `homeserver` container.
+      The `registration.yaml` file is mounted on the `homeserver` container. The bridge images write it as root, so make it readable:
+      ```
+      sudo chmod 644 ${CONF_PATH}/messenger-bridge/registration.yaml
+      ```
 
 <br/>
 
@@ -421,7 +444,10 @@ This replaces the old webhook appservice, which its own author described as "pla
     rate_limited: false
     receive_ephemeral: true
     ```
-    The `registration.yml` file is mounted on the `homeserver` container.
+    The `registration.yml` file is mounted on the `homeserver` container. Same as the bridges — make it readable:
+    ```
+    sudo chmod 644 ${CONF_PATH}/hookshot/registration.yml ${CONF_PATH}/hookshot/passkey.pem
+    ```
 
 <br/>
 
@@ -477,6 +503,8 @@ The bridges and bots wait for the homeserver to pass its health check before the
 
 After a while we should be able to visit the web element UI at `https://webchat.${DOMAIN}`, and register a new user.
 
+The admin UI lives at `https://admin.${DOMAIN}` — log in with your (admin) user there.
+
 To use the bridges, open a DM with the bridge bot (`@telegrambot:matrix.ms.local`, `@instagrambot:matrix.ms.local`, `@messengerbot:matrix.ms.local`) and send `help`. For hookshot, invite `@hookshot:matrix.ms.local` to a room.
 
 <br/>
@@ -491,6 +519,7 @@ To use the bridges, open a DM with the bridge bot (`@telegrambot:matrix.ms.local
   - Actually strong passwords everywhere — the ones in this repo are placeholders
   - Restrict or disable the Traefik dashboard
   - Backups for `${CONF_PATH}`, `${DATA_PATH}` and the `db-data` volume. The signing key in `${CONF_PATH}/homeserver/` is irreplaceable — lose it and your server identity is gone
+- Upgrading is just bumping the image tags in `docker-compose.yaml` and then `docker compose pull && docker compose up -d`. Check the release notes of each component first — the bridges in particular sometimes change config format between versions.
 - There are some more things to setup for the homeserver, bots and bridges. Please refer to their respective documentations.
 
 

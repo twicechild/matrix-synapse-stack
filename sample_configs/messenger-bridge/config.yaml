@@ -36,10 +36,10 @@ homeserver:
 # Application service host/registration related details.
 appservice:
     # The address that the homeserver can use to connect to this appservice.
-    address: http://messenger-bridge:29331
+    address: http://messenger-bridge:29319
     # For Docker, the hostname must be 0.0.0.0 (not localhost).
     hostname: 0.0.0.0
-    port: 29331
+    port: 29319
 
     # The unique ID of this appservice.
     id: messenger
@@ -58,18 +58,17 @@ bridge:
 
     # Permissions for using the bridge.
     # Permitted values:
-    #   relay    - Only use the bridge via the relaybot, no access to commands.
-    #   user     - Relaybot level + access to commands to create bridges.
-    #   puppeting - User level + logging in with a Messenger account.
-    #   full     - Full access to use the bridge, i.e. previous levels + Matrix login.
-    #   admin    - Full access to use the bridge and some extra administration commands.
+    #   relay    - Talk through the relaybot (if enabled), no access otherwise.
+    #   commands - Access to use commands in the bridge, but not login.
+    #   user     - Access to use the bridge with puppeting.
+    #   admin    - Full access, user level with some additional administration tools.
     # Permitted keys:
     #   *        - All Matrix users
     #   domain   - All users on that homeserver
     #   mxid     - Specific user
     permissions:
         "*": relay
-        "matrix.ms.local": full
+        "matrix.ms.local": user
         # "@admin:matrix.ms.local": admin
 
 # End-to-bridge encryption support options.

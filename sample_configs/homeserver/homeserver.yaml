@@ -1180,6 +1180,12 @@ oembed:
 #
 enable_registration: true
 
+# Recent Synapse versions refuse to start with open registration unless this is
+# set (spam/abuse vector). Fine for a lab stack; use tokens or captcha instead
+# for anything exposed.
+#
+enable_registration_without_verification: true
+
 # Time that a user's session remains valid for, after they log in.
 #
 # Note that this is not currently compatible with guest logins.

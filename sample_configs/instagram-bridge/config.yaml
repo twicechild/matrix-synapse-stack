@@ -69,7 +69,7 @@ bridge:
     #   mxid     - Specific user
     permissions:
         "*": relay
-        "matrix.ms.local": full
+        "matrix.ms.local": user
         # "@admin:matrix.ms.local": admin
 
 # End-to-bridge encryption support options.
